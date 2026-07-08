@@ -46,3 +46,24 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
+# Створюємо Elastic IP для NAT Gateway
+resource "aws_eip" "nat" {
+  domain = "vpc"
+
+  tags = {
+    Name = "${var.vpc_name}-nat-eip"
+  }
+}
+
+# Створюємо NAT Gateway у ПЕРШІЙ публічній підмережі
+resource "aws_nat_gateway" "main" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id # Розміщуємо в першій public subnet
+
+  tags = {
+    Name = "${var.vpc_name}-nat-gw"
+  }
+
+  # NAT Gateway вимагає наявності Internet Gateway для роботи
+  depends_on = [aws_internet_gateway.igw]
+}
