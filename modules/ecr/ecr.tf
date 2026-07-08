@@ -6,6 +6,11 @@ resource "aws_ecr_repository" "this" {
   name                 = var.repository_name
   image_tag_mutability = "MUTABLE"
 
+# Налаштовуємо шифрування репозиторію
+  encryption_configuration {
+    encryption_type = "AES256"
+  }
+
   # Автоматичне сканування образів на вразливості при push
   image_scanning_configuration {
     scan_on_push = true
