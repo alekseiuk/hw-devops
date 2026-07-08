@@ -61,7 +61,9 @@
 1. Переконайтеся, що у вас встановлено **Terraform** та **AWS CLI**.
 2. Налаштуйте доступ до вашого AWS-акаунту.
 3. Створіть файл зі змінними на основі прикладу:
-       cp terraform.tfvars.example terraform.tfvars
+```bash
+cp terraform.tfvars.example terraform.tfvars
+```
 4. Відкрийте створений файл `terraform.tfvars` та за потреби змініть значення під свій проєкт (зокрема, s3_bucket_name має бути глобально унікальним).
 
 ---
