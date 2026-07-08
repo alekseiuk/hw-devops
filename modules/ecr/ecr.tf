@@ -39,3 +39,25 @@ resource "aws_ecr_repository_policy" "this" {
     ]
   })
 }
+
+# Життєвий цикл ECR-образів (Lifecycle Policy)
+resource "aws_ecr_lifecycle_policy" "this" {
+  repository = aws_ecr_repository.this.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Зберігати лише 10 останніх образів"
+        selection = {
+          tagStatus   = "any"
+          countType   = "imageCountMoreThan"
+          countNumber = 10
+        }
+        action = {
+          type = "expire" # Дія: видалення
+        }
+      }
+    ]
+  })
+}
