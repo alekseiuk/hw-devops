@@ -69,17 +69,27 @@
 ## Команди для роботи
 
 Ініціалізація проєкту (завантаження провайдерів та модулів):
-    terraform init
+```bash
+terraform init
+```
 
 Перевірка плану виконання (що саме буде створено):
-    terraform plan
+```bash
+terraform plan
+```
 
 Розгортання інфраструктури:
-    terraform apply
+
+```bash
+terraform apply
+```
 
 Видалення інфраструктури:
-    terraform destroy
-*(⚠️ Увага: NAT Gateway є платним ресурсом в AWS. Обов'язково виконуйте terraform destroy після завершення тестування, щоб уникнути зайвих витрат).*
+```bash
+terraform destroy
+```
+
+*⚠️ Увага: NAT Gateway є платним ресурсом в AWS. Обов'язково виконуйте terraform destroy після завершення тестування, щоб уникнути зайвих витрат.*
 
 ---
 
