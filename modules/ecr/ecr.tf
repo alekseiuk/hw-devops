@@ -1,3 +1,6 @@
+# Отримання інформації про поточний акаунт AWS
+data "aws_caller_identity" "current" {}
+
 # Створення самого репозиторію ECR
 resource "aws_ecr_repository" "this" {
   name                 = var.repository_name
@@ -19,7 +22,10 @@ resource "aws_ecr_repository_policy" "this" {
       {
         Sid    = "AllowPullPush"
         Effect = "Allow"
-        Principal = "*" # В реальних проєктах тут краще вказати конкретні IAM Roles або ARN акаунтів
+        # Обмежуємо доступ: лише ресурси поточного AWS-акаунта
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
         Action = [
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchGetImage",
