@@ -54,7 +54,7 @@ resource "aws_eks_node_group" "general" {
 
   # Тип EC2-інстансів для вузлів
   capacity_type  = "ON_DEMAND"
-  instance_types = ["${var.instance_type}"]
+  instance_types = [var.instance_type]
 
   # Конфігурація масштабування
   scaling_config {
