@@ -5,8 +5,8 @@ data "aws_caller_identity" "current" {}
 resource "aws_ecr_repository" "this" {
   name                 = var.repository_name
   image_tag_mutability = "IMMUTABLE"
-  force_delete = true
-# Налаштовуємо шифрування репозиторію
+  force_delete         = true
+  # Налаштовуємо шифрування репозиторію
   encryption_configuration {
     encryption_type = "AES256"
   }
