@@ -29,7 +29,7 @@
     │   └── goit/                               # Головний пакет застосунку
     │       ├── __init__.py                     # Ініціалізація пакета
     │       ├── asgi.py                         # ASGI-конфігурація
-    │       ├── settings.py                     # Налаштування Django (БД підтягується зі змінних середовища)
+    │       ├── settings.py                     # Налаштування Django
     │       ├── urls.py                         # Маршрутизація URL-адрес
     │       └── wsgi.py                         # WSGI-конфігурація
     │
@@ -76,7 +76,7 @@
     * **Service:** LoadBalancer для зовнішнього доступу.
     * **ConfigMap:** Перенесення змінних середовища.
     * **HPA:** Автомасштабування (2-6 подів) при навантаженні > 70%.
-
+    * **Health Checks:** Liveness та Readiness проби для безперервного контролю стану застосунку (кастомний ендпоінт `/health/`).
 
 
 ## 🚀 Інструкція з розгортання
@@ -128,7 +128,9 @@ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/late
 
 * Розгорніть застосунок:
 ```bash
-helm upgrade --install my-django-app ./charts/django-app --set secrets.POSTGRES_PASSWORD="YourSecretPassword"
+helm upgrade --install my-django-app ./charts/django-app \
+  --set secrets.POSTGRES_PASSWORD="YourSecretPassword" \
+  --set secrets.SECRET_KEY="YourSecretDjangoKey"
 ```
 
 
