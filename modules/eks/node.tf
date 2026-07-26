@@ -86,3 +86,8 @@ resource "aws_eks_node_group" "general" {
   }
 }
 
+# Надаємо Worker Nodes права на читання секретів з AWS Secrets Manager
+resource "aws_iam_role_policy_attachment" "nodes_secrets_manager" {
+  policy_arn = "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+  role       = aws_iam_role.nodes.name
+}

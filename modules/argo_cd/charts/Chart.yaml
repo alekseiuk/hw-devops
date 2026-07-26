@@ -1,0 +1,4 @@
+apiVersion: v2
+name: argocd-apps
+description: Helm chart to bootstrap Argo CD Applications and Repositories
+version: 0.1.0

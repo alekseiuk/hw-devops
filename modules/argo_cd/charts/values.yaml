@@ -1,0 +1,8 @@
+repository:
+  url: "https://github.com/your-org/your-repo.git"
+
+application:
+  name: "django-app"
+  namespace: "default"
+  path: "charts/django-app"
+  targetRevision: "main"

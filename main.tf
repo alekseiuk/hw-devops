@@ -37,8 +37,8 @@ module "ecr" {
 # Підключаємо модуль EKS
 module "eks" {
   source          = "./modules/eks"
-  cluster_name    = "eks-cluster-demo" # Назва кластера
-  cluster_version = "1.36"
+  cluster_name    = var.eks_cluster_name # Назва кластера
+  cluster_version = var.eks_cluster_version
   # Для кластера передаємо об'єднаний список усіх підмереж
   cluster_subnet_ids = concat(module.vpc.public_subnets, module.vpc.private_subnets)
 
@@ -51,4 +51,63 @@ module "eks" {
   min_size      = var.eks_min_size
 
   allowed_api_ips = var.allowed_api_ips
+}
+
+# КОНФІГУРАЦІЯ ПРОВАЙДЕРІВ
+provider "kubernetes" {
+  host                   = module.eks.eks_cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    # Передаємо аргументи для AWS CLI, щоб він згенерував токен у реальному часі
+    args = [
+      "eks",
+      "get-token",
+      "--cluster-name",
+      module.eks.eks_cluster_name,
+      "--region",
+      var.aws_region
+    ]
+  }
+}
+
+provider "helm" {
+  kubernetes {
+    host                   = module.eks.eks_cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "aws"
+      args = [
+        "eks",
+        "get-token",
+        "--cluster-name",
+        module.eks.eks_cluster_name,
+        "--region",
+        var.aws_region
+      ]
+    }
+  }
+}
+
+# ВИКЛИК МОДУЛЯ JENKINS
+module "jenkins" {
+  source             = "./modules/jenkins"
+  cluster_name       = module.eks.eks_cluster_name
+  oidc_provider_arn  = module.eks.oidc_provider_arn
+  oidc_provider_url  = module.eks.oidc_provider_url
+  ecr_repository_arn = module.ecr.repository_arn
+
+  depends_on = [module.eks]
+}
+
+# ВИКЛИК МОДУЛЯ ARGO CD
+module "argo_cd" {
+  source              = "./modules/argo_cd"
+  app_repo_url        = var.argocd_app_repo_url
+  app_target_revision = var.argocd_app_target_revision
+  depends_on          = [module.eks]
 }

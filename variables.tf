@@ -32,6 +32,17 @@ variable "ecr_repository_name" {
 }
 
 # --- Змінні для EKS ---
+variable "eks_cluster_name" {
+  description = "Назва кластера EKS"
+  type        = string
+}
+
+variable "eks_cluster_version" {
+  description = "Версія Kubernetes для кластера EKS"
+  type        = string
+  default     = "1.36"
+}
+
 variable "eks_instance_type" {
   description = "Тип EC2 інстансу для Worker Nodes"
   type        = string
@@ -55,4 +66,16 @@ variable "eks_min_size" {
 variable "allowed_api_ips" {
   description = "Список IP-адрес (CIDR), яким дозволено доступ до EKS API"
   type        = list(string)
+}
+
+# --- Змінні для Argo CD ---
+variable "argocd_app_repo_url" {
+  description = "URL Git-репозиторію з Helm-чартом застосунку"
+  type        = string
+}
+
+variable "argocd_app_target_revision" {
+  description = "Гілка або тег у репозиторії для Argo CD"
+  type        = string
+  default     = "main"
 }
