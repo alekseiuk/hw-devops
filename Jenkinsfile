@@ -49,7 +49,7 @@ spec:
         CREDENTIALS_ID = 'github-token'
         
         // === Dynamic Variables ===
-        IMAGE_TAG      = "${BUILD_NUMBER}-${GIT_COMMIT[0..7]}"
+        IMAGE_TAG      = "${BUILD_NUMBER}-${env.GIT_COMMIT?.take(8) ?: 'latest'}"
     }
 
     stages {

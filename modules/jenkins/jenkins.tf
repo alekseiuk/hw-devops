@@ -90,6 +90,15 @@ resource "helm_release" "jenkins" {
     value = aws_iam_role.jenkins_kaniko_role.arn
   }
 
-  # Очікуємо створення Storage Class перед деплоєм
-  depends_on = [kubernetes_storage_class_v1.ebs_sc]
+  depends_on = [
+    kubernetes_storage_class_v1.ebs_sc,
+    helm_release.jenkins_secrets
+  ]
+}
+
+resource "helm_release" "jenkins_secrets" {
+  name             = "jenkins-secrets"
+  namespace        = "jenkins"
+  chart            = "${path.module}/charts/jenkins-secrets"
+  create_namespace = true
 }

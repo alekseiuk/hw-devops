@@ -1,0 +1,5 @@
+apiVersion: v2
+name: jenkins-secrets
+description: ExternalSecret for Jenkins admin credentials
+type: application
+version: 0.1.0

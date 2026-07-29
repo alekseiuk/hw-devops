@@ -1,4 +1,10 @@
 controller:
+  admin:
+    username: "admin"
+    existingSecret: "jenkins-admin-creds"
+    userKey: "jenkins-admin-user"
+    passwordKey: "jenkins-admin-password"
+
   serviceType: LoadBalancer
   servicePort: 80
   service:
@@ -21,6 +27,7 @@ controller:
     - github:latest
     - docker-plugin:latest
     - docker-workflow:latest
+    - configuration-as-code:latest
 
   serviceAccount:
     name: jenkins-sa

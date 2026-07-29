@@ -21,3 +21,11 @@ resource "helm_release" "external_secrets" {
     value = "true"
   }
 }
+
+resource "helm_release" "eso_resources" {
+  name      = "eso-resources"
+  chart     = "${path.module}/charts/eso-resources"
+  namespace = kubernetes_namespace.external_secrets.metadata[0].name
+
+  depends_on = [helm_release.external_secrets]
+}
