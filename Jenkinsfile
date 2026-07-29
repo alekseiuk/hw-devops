@@ -29,14 +29,27 @@ spec:
     }
     
     environment {
+
+        // === AWS & Registry Config ===
+        AWS_ACCOUNT_ID = '995370108987'
         AWS_REGION     = 'eu-central-1'
-        ECR_REGISTRY   = '995370108987.dkr.ecr.eu-central-1.amazonaws.com'
+        ECR_REGISTRY   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         ECR_REPOSITORY = 'demo-ecr'
-        IMAGE_TAG      = "${BUILD_NUMBER}-${GIT_COMMIT[0..7]}"
         
-        // Змінні для GitOps
+        // === Application & Build Context Config ===
+        APP_DIR        = 'django'
+        DOCKERFILE_NAME= 'Dockerfile'
+        
+        // === GitOps & Deployment Config ===
+        COMMIT_EMAIL   = "jenkins@ci.com"
+        COMMIT_NAME    = "Jenkins CI"
         GIT_REPO_URL   = 'github.com/alekseiuk/hw-devops.git'
-        CREDENTIALS_ID = 'github-token' // ID, який ти створив у Jenkins
+        GIT_BRANCH     = 'lesson-9'
+        VALUES_PATH    = 'charts/django-app/values.yaml'
+        CREDENTIALS_ID = 'github-token'
+        
+        // === Dynamic Variables ===
+        IMAGE_TAG      = "${BUILD_NUMBER}-${GIT_COMMIT[0..7]}"
     }
 
     stages {
@@ -51,8 +64,8 @@ spec:
                 container('kaniko') {
                     sh """
                     /kaniko/executor \
-                        --context=dir://django \
-                        --dockerfile=django/Dockerfile \
+                        --context=dir://\${WORKSPACE}/${APP_DIR} \
+                        --dockerfile=${DOCKERFILE_NAME} \
                         --destination=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} \
                         --destination=${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
                     """
@@ -67,20 +80,19 @@ spec:
                     withCredentials([usernamePassword(credentialsId: env.CREDENTIALS_ID, passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                         sh """
                         # Налаштовуємо Git
-                        git config --global user.email "jenkins@ci.com"
-                        git config --global user.name "Jenkins CI"
+                        git config --global user.email "${COMMIT_EMAIL}"
+                        git config --global user.name "${COMMIT_NAME}"
                         
-                        # Змінюємо тег образу у values.yaml за допомогою sed
-                        # Шукаємо рядок, що починається з '  tag:' і замінюємо його значення на нове
-                        sed -i "s/tag: .*/tag: \\"${IMAGE_TAG}\\"/" charts/django-app/values.yaml
+                        # Оновлення тегу в values.yaml
+                        sed -i "s|tag: .*|tag: \\"${IMAGE_TAG}\\"|" "\${VALUES_PATH}"
                         
                         # Додаємо зміни, комітимо та пушимо
-                        git add charts/django-app/values.yaml
+                        git add "\${VALUES_PATH}"
                         git commit -m "ci: update image tag to ${IMAGE_TAG} [skip ci]"
                         
-                        # Формуємо URL з авторизацією та пушимо в гілку main
+                        # Формуємо URL з авторизацією та пушимо в гілку
                         git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@${GIT_REPO_URL}
-                        git push origin HEAD:main
+                        git push origin HEAD:${GIT_BRANCH}
                         """
                     }
                 }
