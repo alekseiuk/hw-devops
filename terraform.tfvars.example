@@ -22,4 +22,20 @@ allowed_api_ips   = ["0.0.0.0/0"]
 
 # Argo CD
 argocd_app_repo_url        = "https://github.com/alekseiuk/hw-devops.git"
-argocd_app_target_revision = "lesson-9"
+argocd_app_target_revision = "lesson-10"
+
+# База даних (RDS / Aurora)
+db_identifier              = "goit-db"
+use_aurora                 = false # Перемкніть на true, якщо потрібна Aurora
+db_name                    = "goit-db"
+db_username                = "postgres"
+db_instance_class          = "db.t3.micro"
+db_allocated_storage       = 20
+db_multi_az                = true
+db_backup_retention_period = 7
+aurora_replica_count       = 1
+
+db_parameters = {
+  max_connections            = "200"
+  log_min_duration_statement = "500"
+}

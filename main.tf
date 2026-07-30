@@ -93,7 +93,7 @@ provider "helm" {
   }
 }
 
-# ВИКЛИК МОДУЛЯ JENKINS
+# Підключаємо модуль JENKINS
 module "jenkins" {
   source             = "./modules/jenkins"
   cluster_name       = module.eks.eks_cluster_name
@@ -104,10 +104,50 @@ module "jenkins" {
   depends_on = [module.eks]
 }
 
-# ВИКЛИК МОДУЛЯ ARGO CD
+# Підключаємо модуль ARGO CD
 module "argo_cd" {
   source              = "./modules/argo_cd"
   app_repo_url        = var.argocd_app_repo_url
   app_target_revision = var.argocd_app_target_revision
   depends_on          = [module.eks]
+}
+
+# Підключаємо модуль RDS
+module "rds" {
+  source = "./modules/rds"
+
+  name       = var.db_identifier
+  use_aurora = var.use_aurora
+
+  # --- Налаштування виключно для Aurora ---
+  aurora_replica_count          = var.aurora_replica_count
+  engine_cluster                = var.db_engine_aurora
+  engine_version_cluster        = var.db_engine_version_aurora
+  parameter_group_family_aurora = var.db_parameter_group_aurora
+
+  # --- Налаштування виключно для Standard RDS ---
+  engine                     = var.db_engine_rds
+  engine_version             = var.db_engine_version_rds
+  parameter_group_family_rds = var.db_parameter_group_rds
+  multi_az                   = var.db_multi_az
+  allocated_storage          = var.db_allocated_storage
+
+  # --- Спільні налаштування (Common) ---
+  instance_class = var.db_instance_class
+  db_name        = var.db_name
+  username       = var.db_username
+
+  # --- Безпека та Мережа ---
+  vpc_id              = module.vpc.vpc_id
+  subnet_private_ids  = module.vpc.private_subnets
+  subnet_public_ids   = module.vpc.public_subnets
+  publicly_accessible = false
+
+  backup_retention_period = var.db_backup_retention_period
+  parameters              = var.db_parameters
+
+  tags = {
+    Environment = "dev"
+    Project     = var.db_name
+  }
 }

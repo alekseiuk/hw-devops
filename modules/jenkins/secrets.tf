@@ -1,11 +1,7 @@
-resource "aws_secretsmanager_secret" "django_secrets" {
-  name        = "prod/django/secrets"
-  description = "Секрети для Django застосунку"
-}
-
 resource "aws_secretsmanager_secret" "jenkins_admin" {
-  name        = "prod/jenkins/admin"
-  description = "Jenkins admin credentials"
+  name                    = "prod/jenkins/admin"
+  description             = "Jenkins admin credentials"
+  recovery_window_in_days = 0 # Дозволяє миттєво видаляти секрет при terraform destroy
 }
 
 resource "random_password" "jenkins_admin" {

@@ -79,3 +79,105 @@ variable "argocd_app_target_revision" {
   type        = string
   default     = "main"
 }
+
+
+# --- Змінні для RDS / AURORA ---
+variable "db_identifier" {
+  description = "Ідентифікатор інстансу або кластера бази даних"
+  type        = string
+}
+
+variable "use_aurora" {
+  description = "Чи використовувати Aurora кластер замість стандартного RDS"
+  type        = bool
+  default     = false
+}
+
+# --- Налаштування Aurora ---
+variable "aurora_replica_count" {
+  description = "Кількість Read Replicas для кластера Aurora"
+  type        = number
+  default     = 1
+}
+
+variable "db_engine_aurora" {
+  description = "Тип рушія для Aurora"
+  type        = string
+  default     = "aurora-postgresql"
+}
+
+variable "db_engine_version_aurora" {
+  description = "Версія рушія для Aurora"
+  type        = string
+  default     = "15.3"
+}
+
+variable "db_parameter_group_aurora" {
+  description = "Parameter Group Family для Aurora"
+  type        = string
+  default     = "aurora-postgresql15"
+}
+
+# --- Налаштування Standard RDS ---
+variable "db_engine_rds" {
+  description = "Тип рушія для стандартного RDS"
+  type        = string
+  default     = "postgres"
+}
+
+variable "db_engine_version_rds" {
+  description = "Версія рушія для стандартного RDS"
+  type        = string
+  default     = "17.2"
+}
+
+variable "db_parameter_group_rds" {
+  description = "Parameter Group Family для стандартного RDS"
+  type        = string
+  default     = "postgres17"
+}
+
+variable "db_multi_az" {
+  description = "Увімкнути Multi-AZ для стандартного RDS"
+  type        = bool
+  default     = true
+}
+
+variable "db_allocated_storage" {
+  description = "Об'єм пам'яті (ГБ) для стандартного RDS"
+  type        = number
+  default     = 20
+}
+
+# --- Спільні налаштування баз даних ---
+variable "db_instance_class" {
+  description = "Тип інстансу бази даних"
+  type        = string
+  default     = "db.t3.medium"
+}
+
+variable "db_name" {
+  description = "Назва бази даних"
+  type        = string
+}
+
+variable "db_username" {
+  description = "Ім'я користувача-адміністратора бази даних"
+  type        = string
+  default     = "postgres"
+}
+
+variable "db_backup_retention_period" {
+  description = "Кількість днів для зберігання бекапів"
+  type        = number
+  default     = 7
+}
+
+variable "db_parameters" {
+  description = "Додаткові параметри для бази даних"
+  type        = map(string)
+  default = {
+    max_connections            = "200"
+    log_min_duration_statement = "500"
+  }
+}

@@ -26,14 +26,5 @@ resources:
     memory: 512Mi
 
 config:
-  POSTGRES_HOST: "db"
-  POSTGRES_PORT: "5432"
-  POSTGRES_USER: "django_user"
-  POSTGRES_DB: "django_db"
   DEBUG: "False"
-  ALLOWED_HOSTS: "localhost,127.0.0.1,db"
-
-secrets:
-  # Значення передається ззовні під час розгортання
-  POSTGRES_PASSWORD: ""
-  SECRET_KEY: ""
+  ALLOWED_HOSTS: "localhost,127.0.0.1"
