@@ -5,7 +5,7 @@
 
 ## 🏗 Архітектура проєкту
 
-* **Інфраструктура (Terraform):** VPC, EKS, ECR, RDS (PostgreSQL).
+* **Інфраструктура (Terraform):** VPC, EKS, ECR, RDS (PostgreSQL / Aurora).
 * **CI/CD (GitOps):** 
   * **Jenkins** (збірка образу без Docker-демона за допомогою Kaniko, пуш в ECR та оновлення тегу в Git).
   * **ArgoCD** (відстежує зміни в Git та автоматично розгортає нові версії в EKS).
@@ -25,10 +25,99 @@
    У файлі `charts/django-app/values.yaml` замініть AWS Account ID у блоці `image.repository` на власний.
 
 
+## 🗄 Налаштування Бази Даних (Модуль RDS)
+
+Цей проєкт включає гнучкий модуль для розгортання баз даних AWS RDS. Він підтримує як **Standard RDS** (PostgreSQL/MySQL), так і **Amazon Aurora** (PostgreSQL-compatible).
+
+### Приклад використання модуля
+
+Усі необхідні налаштування бази даних передаються через модуль `rds` у головному файлі `main.tf`. Пароль генерується автоматично всередині модуля та зберігається в AWS Secrets Manager.
+
+```hcl
+module "rds" {
+  source = "./modules/rds"
+
+  name       = var.db_identifier
+  use_aurora = var.use_aurora
+
+  # Налаштування для Standard RDS
+  engine                     = var.db_engine_rds
+  engine_version             = var.db_engine_version_rds
+  parameter_group_family_rds = var.db_parameter_group_rds
+  multi_az                   = var.db_multi_az
+  allocated_storage          = var.db_allocated_storage
+
+  # Спільні налаштування
+  instance_class = var.db_instance_class
+  db_name        = var.db_name
+  username       = var.db_username
+
+  # Мережеві налаштування
+  vpc_id              = module.vpc.vpc_id
+  subnet_private_ids  = module.vpc.private_subnets
+  subnet_public_ids   = module.vpc.public_subnets
+  publicly_accessible = false
+
+  backup_retention_period = var.db_backup_retention_period
+  parameters              = var.db_parameters
+}
+```
+
+### Як змінити тип БД, Engine або клас інстансу
+
+Керування модулем здійснюється виключно через змінні у вашому файлі `terraform.tfvars`. Вам не потрібно змінювати код самого модуля.
+
+1. **Перехід зі Standard RDS на Amazon Aurora:**
+Змініть значення змінної `use_aurora` на `true`. Модуль автоматично проігнорує налаштування звичайного RDS і розгорне кластер Aurora.
+```hcl
+use_aurora           = true
+aurora_replica_count = 2 # Кількість інстансів для читання (Read Replicas)
+```
+
+2. **Зміна типу інстансу (ресурсів):**
+Щоб виділити більше пам'яті/CPU для бази даних, змініть `db_instance_class`:
+```hcl
+db_instance_class = "db.t3.medium" # Наприклад, замість db.t3.micro
+```
+
+3. **Зміна версії бази даних (Engine Version):**
+Ви можете вказати точну версію PostgreSQL:
+```hcl
+db_engine_version_rds      = "15.4"
+db_parameter_group_rds     = "postgres15" # Група параметрів має відповідати мажорній версії
+```
+
+### Опис змінних модуля (Variables)
+
+Нижче наведено перелік основних змінних, які приймає модуль RDS:
+
+| Змінна | Тип | За замовчуванням | Опис |
+| --- | --- | --- | --- |
+| `name` | `string` | *(обов'язково)* | Базовий ідентифікатор інстансу або кластера бази даних в AWS. |
+| `use_aurora` | `bool` | `false` | Визначає, чи розгортати кластер Amazon Aurora замість Standard RDS. |
+| `engine` | `string` | `postgres` | Тип рушія БД для Standard RDS (наприклад, `postgres`, `mysql`). |
+| `engine_cluster` | `string` | `aurora-postgresql` | Тип рушія для Amazon Aurora. |
+| `engine_version` | `string` | `14.7` | Версія рушія для Standard RDS. |
+| `engine_version_cluster` | `string` | `15.3` | Версія рушія для Aurora. |
+| `instance_class` | `string` | `db.t3.micro` | Тип EC2-інстансу для бази даних (визначає CPU та RAM). |
+| `allocated_storage` | `number` | `20` | Об'єм виділеного дискового простору (в ГБ) для Standard RDS. |
+| `db_name` | `string` | *(обов'язково)* | Початкова назва бази даних (створюється автоматично). |
+| `username` | `string` | *(обов'язково)* | Ім'я головного користувача (Master Username) бази даних. |
+| `aurora_replica_count` | `number` | `1` | Кількість Read Replicas, якщо використовується Aurora. |
+| `multi_az` | `bool` | `false` | Увімкнення розгортання у кількох зонах доступності для Standard RDS (High Availability). |
+| `publicly_accessible` | `bool` | `false` | Чи має база даних публічну IP-адресу (рекомендується `false`). |
+| `vpc_id` | `string` | *(обов'язково)* | ID VPC, у якій буде розміщена база даних. |
+| `subnet_private_ids` | `list(string)` | *(обов'язково)* | Список ID приватних підмереж для розміщення RDS. |
+| `backup_retention_period` | `number` | `7` | Кількість днів для зберігання автоматичних резервних копій. |
+| `db_parameters` | `map(string)` | `(див. tfvars)` | Словник параметрів БД (напр., `max_connections`, `work_mem`, `log_statement`). |
+
+
 ## 🛠 Крок 1: Розгортання Інфраструктури (Terraform)
 
 ### 1.1 Ініціалізація S3 Backend
+
 Для зберігання стану Terraform необхідно спочатку розгорнути S3-бакет:
+
 ```bash
 cd bootstrap
 terraform init

@@ -38,4 +38,6 @@ aurora_replica_count       = 1
 db_parameters = {
   max_connections            = "200"
   log_min_duration_statement = "500"
+  log_statement              = "all"
+  work_mem                   = "4096"
 }
