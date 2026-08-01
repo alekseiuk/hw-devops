@@ -44,7 +44,7 @@ spec:
         COMMIT_EMAIL   = "jenkins@ci.com"
         COMMIT_NAME    = "Jenkins CI"
         GIT_REPO_URL   = 'github.com/alekseiuk/hw-devops.git'
-        GIT_BRANCH     = 'lesson-9'
+        GIT_BRANCH     = 'final-project'
         VALUES_PATH    = 'charts/django-app/values.yaml'
         CREDENTIALS_ID = 'github-token'
         

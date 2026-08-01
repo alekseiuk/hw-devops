@@ -13,8 +13,8 @@ ecr_repository_name = "demo-ecr"
 # EKS
 eks_cluster_name    = "eks-cluster-demo"
 eks_cluster_version = "1.36"
-# NOTE: t3.micro використовується лише для Free Tier / тестування.
-eks_instance_type = "t3.micro"
+
+eks_instance_type = "t3.medium"
 eks_desired_size  = 2
 eks_max_size      = 3
 eks_min_size      = 1
@@ -22,7 +22,7 @@ allowed_api_ips   = ["0.0.0.0/0"]
 
 # Argo CD
 argocd_app_repo_url        = "https://github.com/alekseiuk/hw-devops.git"
-argocd_app_target_revision = "lesson-10"
+argocd_app_target_revision = "final-project"
 
 # База даних (RDS / Aurora)
 db_identifier              = "goit-db"
@@ -31,8 +31,8 @@ db_name                    = "goit-db"
 db_username                = "postgres"
 db_instance_class          = "db.t3.micro"
 db_allocated_storage       = 20
-db_multi_az                = true
-db_backup_retention_period = 7
+db_multi_az                = false
+db_backup_retention_period = 0
 aurora_replica_count       = 1
 
 db_parameters = {
