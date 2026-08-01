@@ -128,7 +128,7 @@ variable "db_engine_rds" {
 variable "db_engine_version_rds" {
   description = "Версія рушія для стандартного RDS"
   type        = string
-  default     = "17.2"
+  default     = "17.10"
 }
 
 variable "db_parameter_group_rds" {

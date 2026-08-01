@@ -87,9 +87,9 @@ variable "parameter_group_family_aurora" {
 }
 variable "engine_version_cluster" {
   type    = string
-  default = "15.3"
+  default = "17.10"
 }
 variable "parameter_group_family_rds" {
   type    = string
-  default = "postgres15"
+  default = "postgres17"
 }

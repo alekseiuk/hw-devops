@@ -1,4 +1,9 @@
 controller:
+  image:
+    registry: "docker.io"
+    repository: "jenkins/jenkins"
+    tag: "lts-jdk17"
+
   admin:
     username: "admin"
     existingSecret: "jenkins-admin-creds"
