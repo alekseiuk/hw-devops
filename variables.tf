@@ -179,5 +179,7 @@ variable "db_parameters" {
   default = {
     max_connections            = "200"
     log_min_duration_statement = "500"
+    log_statement              = "all"
+    work_mem                   = "4096"
   }
 }

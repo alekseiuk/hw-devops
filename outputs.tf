@@ -58,3 +58,15 @@ output "jenkins_namespace" {
   value = module.jenkins.jenkins_namespace
 }
 
+# ==========================================
+# RDS OUTPUTS
+# ==========================================
+output "db_endpoint" {
+  description = "Database endpoint"
+  value       = module.rds.db_endpoint
+}
+
+output "db_port" {
+  description = "Database port"
+  value       = module.rds.db_port
+}
