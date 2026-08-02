@@ -66,8 +66,7 @@ spec:
                     /kaniko/executor \
                         --context=dir://\${WORKSPACE}/${APP_DIR} \
                         --dockerfile=${DOCKERFILE_NAME} \
-                        --destination=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} \
-                        --destination=${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
+                        --destination=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
                     """
                 }
             }
