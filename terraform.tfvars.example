@@ -25,11 +25,13 @@ argocd_app_repo_url        = "https://github.com/alekseiuk/hw-devops.git"
 argocd_app_target_revision = "final-project"
 
 # База даних (RDS / Aurora)
-db_identifier              = "goit-db"
+db_identifier              = "goitdb"
 use_aurora                 = false # Перемкніть на true, якщо потрібна Aurora
-db_name                    = "goit-db"
+db_name                    = "goitdb"
 db_username                = "postgres"
 db_instance_class          = "db.t3.micro"
+db_engine_version_rds      = "17.10"
+db_parameter_group_rds     = "postgres17"
 db_allocated_storage       = 20
 db_multi_az                = false
 db_backup_retention_period = 0

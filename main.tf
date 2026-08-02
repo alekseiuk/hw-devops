@@ -151,3 +151,9 @@ module "rds" {
     Project     = var.db_name
   }
 }
+
+# Підключаємо модуль monitoring
+module "monitoring" {
+  source     = "./modules/monitoring"
+  depends_on = [module.eks] # Встановлюємо тільки після підняття кластера
+}

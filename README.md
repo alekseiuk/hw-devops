@@ -1,123 +1,24 @@
-# 🚀 AWS EKS & Django App Deployment (GitOps with Jenkins & ArgoCD)
+# 🚀 Cloud-Native інфраструктура на AWS (GitOps + Моніторинг)
 
-Цей проєкт розгортає хмарну інфраструктуру на AWS за допомогою Terraform та використовує підхід GitOps для автоматичного CI/CD конвеєра за допомогою Jenkins та ArgoCD.
+Цей проєкт автоматизує розгортання повноцінної, відмовостійкої інфраструктури на AWS за допомогою **Terraform**. Проєкт реалізує сучасний **GitOps** пайплайн для розгортання Django-застосунку та включає повний стек моніторингу.
 
-
-## 🏗 Архітектура проєкту
-
-* **Інфраструктура (Terraform):** VPC, EKS, ECR, RDS (PostgreSQL / Aurora).
-* **CI/CD (GitOps):** 
-  * **Jenkins** (збірка образу без Docker-демона за допомогою Kaniko, пуш в ECR та оновлення тегу в Git).
-  * **ArgoCD** (відстежує зміни в Git та автоматично розгортає нові версії в EKS).
-* **Секрети:** AWS Secrets Manager + External Secrets Operator (ESO) для автоматичної та безпечної передачі паролів, згенерованих Terraform, у поди кластера.
-* **Застосунок:** Django (контейнеризований) з Helm-чартом, автоматичними міграціями БД, HPA (автомасштабування) та Liveness/Readiness пробами.
+## 🏗 Технічний стек та Компоненти
+* **Інфраструктура (Terraform):** AWS VPC, EKS (з EBS CSI Driver), RDS (PostgreSQL/Aurora), ECR.
+* **Секрети:** AWS Secrets Manager + External Secrets Operator (ESO).
+* **CI/CD:** Jenkins (збірка через Kaniko) + Argo CD.
+* **Моніторинг:** Prometheus, Grafana, Metrics Server (для HPA).
 
 
-## ⚙️ Підготовка до запуску
+## 🛠 Етап 1. Підготовка середовища
 
-Перед розгортанням переконайтеся, що ви оновили конфігурацію під своє середовище:
+Перед запуском переконайтеся, що у вас встановлені: `aws-cli`, `terraform`, `kubectl`, `helm`, `jq`. 
 
-1. **Файл `terraform.tfvars`:** 
-   Створіть цей файл на основі `terraform.tfvars.example`. Вкажіть посилання на **свій** Git-репозиторій у змінній `argocd_app_repo_url`.
-2. **Файл `Jenkinsfile`:**
-   Оновіть змінні `AWS_ACCOUNT_ID` (ваш ID акаунта AWS) та `GIT_REPO_URL` (посилання на ваш репозиторій).
-3. **Helm-чарт:**
-   У файлі `charts/django-app/values.yaml` замініть AWS Account ID у блоці `image.repository` на власний.
+**1. Налаштування змінних:**
+Скопіюйте файл `terraform.tfvars.example` у `terraform.tfvars`. 
+Обов'язково оновіть змінну `argocd_app_repo_url`, вказавши посилання на ваш власний Git-репозиторій.
 
-
-## 🗄 Налаштування Бази Даних (Модуль RDS)
-
-Цей проєкт включає гнучкий модуль для розгортання баз даних AWS RDS. Він підтримує як **Standard RDS** (PostgreSQL/MySQL), так і **Amazon Aurora** (PostgreSQL-compatible).
-
-### Приклад використання модуля
-
-Усі необхідні налаштування бази даних передаються через модуль `rds` у головному файлі `main.tf`. Пароль генерується автоматично всередині модуля та зберігається в AWS Secrets Manager.
-
-```hcl
-module "rds" {
-  source = "./modules/rds"
-
-  name       = var.db_identifier
-  use_aurora = var.use_aurora
-
-  # Налаштування для Standard RDS
-  engine                     = var.db_engine_rds
-  engine_version             = var.db_engine_version_rds
-  parameter_group_family_rds = var.db_parameter_group_rds
-  multi_az                   = var.db_multi_az
-  allocated_storage          = var.db_allocated_storage
-
-  # Спільні налаштування
-  instance_class = var.db_instance_class
-  db_name        = var.db_name
-  username       = var.db_username
-
-  # Мережеві налаштування
-  vpc_id              = module.vpc.vpc_id
-  subnet_private_ids  = module.vpc.private_subnets
-  subnet_public_ids   = module.vpc.public_subnets
-  publicly_accessible = false
-
-  backup_retention_period = var.db_backup_retention_period
-  parameters              = var.db_parameters
-}
-```
-
-### Як змінити тип БД, Engine або клас інстансу
-
-Керування модулем здійснюється виключно через змінні у вашому файлі `terraform.tfvars`. Вам не потрібно змінювати код самого модуля.
-
-1. **Перехід зі Standard RDS на Amazon Aurora:**
-Змініть значення змінної `use_aurora` на `true`. Модуль автоматично проігнорує налаштування звичайного RDS і розгорне кластер Aurora.
-```hcl
-use_aurora           = true
-aurora_replica_count = 2 # Кількість інстансів для читання (Read Replicas)
-```
-
-2. **Зміна типу інстансу (ресурсів):**
-Щоб виділити більше пам'яті/CPU для бази даних, змініть `db_instance_class`:
-```hcl
-db_instance_class = "db.t3.medium" # Наприклад, замість db.t3.micro
-```
-
-3. **Зміна версії бази даних (Engine Version):**
-Ви можете вказати точну версію PostgreSQL:
-```hcl
-db_engine_version_rds      = "15.4"
-db_parameter_group_rds     = "postgres15" # Група параметрів має відповідати мажорній версії
-```
-
-### Опис змінних модуля (Variables)
-
-Нижче наведено перелік основних змінних, які приймає модуль RDS:
-
-| Змінна | Тип | За замовчуванням | Опис |
-| --- | --- | --- | --- |
-| `name` | `string` | *(обов'язково)* | Базовий ідентифікатор інстансу або кластера бази даних в AWS. |
-| `use_aurora` | `bool` | `false` | Визначає, чи розгортати кластер Amazon Aurora замість Standard RDS. |
-| `engine` | `string` | `postgres` | Тип рушія БД для Standard RDS (наприклад, `postgres`, `mysql`). |
-| `engine_cluster` | `string` | `aurora-postgresql` | Тип рушія для Amazon Aurora. |
-| `engine_version` | `string` | `14.7` | Версія рушія для Standard RDS. |
-| `engine_version_cluster` | `string` | `15.3` | Версія рушія для Aurora. |
-| `instance_class` | `string` | `db.t3.micro` | Тип EC2-інстансу для бази даних (визначає CPU та RAM). |
-| `allocated_storage` | `number` | `20` | Об'єм виділеного дискового простору (в ГБ) для Standard RDS. |
-| `db_name` | `string` | *(обов'язково)* | Початкова назва бази даних (створюється автоматично). |
-| `username` | `string` | *(обов'язково)* | Ім'я головного користувача (Master Username) бази даних. |
-| `aurora_replica_count` | `number` | `1` | Кількість Read Replicas, якщо використовується Aurora. |
-| `multi_az` | `bool` | `false` | Увімкнення розгортання у кількох зонах доступності для Standard RDS (High Availability). |
-| `publicly_accessible` | `bool` | `false` | Чи має база даних публічну IP-адресу (рекомендується `false`). |
-| `vpc_id` | `string` | *(обов'язково)* | ID VPC, у якій буде розміщена база даних. |
-| `subnet_private_ids` | `list(string)` | *(обов'язково)* | Список ID приватних підмереж для розміщення RDS. |
-| `backup_retention_period` | `number` | `7` | Кількість днів для зберігання автоматичних резервних копій. |
-| `db_parameters` | `map(string)` | `(див. tfvars)` | Словник параметрів БД (напр., `max_connections`, `work_mem`, `log_statement`). |
-
-
-## 🛠 Крок 1: Розгортання Інфраструктури (Terraform)
-
-### 1.1 Ініціалізація S3 Backend
-
-Для зберігання стану Terraform необхідно спочатку розгорнути S3-бакет:
-
+**2. Ініціалізація Terraform Backend (S3):**
+Для безпечного зберігання стану Terraform, спочатку розгорніть S3-бакет:
 ```bash
 cd bootstrap
 terraform init
@@ -125,60 +26,128 @@ terraform apply -auto-approve
 cd ..
 ```
 
-### 1.2 Розгортання основної інфраструктури (EKS, VPC, Jenkins, ArgoCD, RDS)
-
-Усі секрети бази даних та ключі для Django генеруються Terraform автоматично і зберігаються в AWS Secrets Manager.
+**3. Ініціалізація основного проєкту:**
+Переконайтеся, що всі змінні та параметри вказані вірно, після чого виконайте:
 
 ```bash
 terraform init
-terraform apply -auto-approve
 ```
 
 
-## 🔒 Крок 2: Отримання доступів та налаштування Jenkins
+## 🚀 Етап 2. Розгортання інфраструктури
 
-Для того, щоб Jenkins міг автоматично оновлювати теги образів у репозиторії, йому потрібен доступ до GitHub.
+**1. Виконати команду розгортання:**
+Цей процес підніме VPC, EKS, RDS та всі супутні компоненти. Займе близько 20 хвилин:
 
-### 2.1 Підключення до кластера
+```bash
+terraform apply -auto-approve
+```
+
+**2. Підключення до кластера EKS:**
+Після успішного завершення Terraform, налаштуйте `kubectl` для роботи з новим кластером:
 
 ```bash
 aws eks update-kubeconfig --region eu-central-1 --name eks-cluster-demo
 ```
 
-### 2.2 Отримання пароля від Jenkins
+**3. Перевірити стан ресурсів:**
+Переконайтеся, що всі поди та сервіси успішно запущені у відповідних неймспейсах:
 
-Terraform автоматично згенерував пароль для Jenkins. Щоб отримати його, виконайте команду (необхідна утиліта `jq`):
+```bash
+kubectl get all -n jenkins
+kubectl get all -n argocd
+kubectl get all -n monitoring
+```
+
+
+## 🔐 Отримання доступів (Паролі)
+
+Усі паролі генеруються автоматично під час розгортання для забезпечення максимальної безпеки.
+
+**Пароль від Jenkins (з AWS Secrets Manager):**
 
 ```bash
 aws secretsmanager get-secret-value --secret-id prod/jenkins/admin --query 'SecretString' --output text | jq -r '.password'
+# Логін: admin
 ```
 
-### 2.3 Авторизація Jenkins у GitHub
-
-1. Відкрийте інтерфейс Jenkins (через LoadBalancer IP або Ingress сервісу). Логін: `admin`, пароль — з попереднього кроку.
-2. Створіть Personal Access Token (PAT) у GitHub з правами `repo`.
-3. У Jenkins перейдіть до **Manage Jenkins -> Credentials -> (global) -> Add Credentials**.
-4. Оберіть тип **Username with password**.
-5. Заповніть:
-* **Username:** ваш логін GitHub.
-* **Password:** ваш PAT з GitHub.
-* **ID:** `github-token` *(ідентифікатор обов'язково має бути саме таким, він використовується у Jenkinsfile)*.
-
-
-## 🚀 Як працює CI/CD пайплайн (Робочий процес)
-
-Процес повністю автоматизовано:
-
-1. **Push у репозиторій:** Ви робите зміни у коді `django/` та пушите їх у свій GitHub.
-2. **Збірка (Jenkins):** Jenkins автоматично запускає пайплайн, Kaniko збирає новий Docker-образ і пушить його в AWS ECR.
-3. **Оновлення Git (Jenkins):** Jenkins оновлює файл `charts/django-app/values.yaml`, записуючи туди новий тег образу, і робить `git commit` та `git push` з позначкою `[skip ci]`.
-4. **Синхронізація (ArgoCD):** ArgoCD бачить зміну тегу в репозиторії, автоматично підтягує секрети для БД (адресу, логін, пароль) з Secrets Manager та розгортає нові поди Django у кластері EKS, застосовуючи при цьому міграції бази даних.
-
-
-## 🧹 Видалення інфраструктури (Очищення)
-
-Щоб уникнути зайвих витрат на AWS, після завершення роботи видаліть усі ресурси:
+**Пароль від Argo CD (з Kubernetes Secret):**
 
 ```bash
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d ; echo
+# Логін: admin
+```
+
+**Пароль від Grafana (з Kubernetes Secret):**
+
+```bash
+kubectl get secret --namespace monitoring prometheus-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+# Логін: admin
+```
+
+
+## 🌐 Етап 3. Перевірка доступності
+
+Для доступу до вебінтерфейсів сервісів використовуйте port-forwarding. Відкрийте нові вкладки терміналу для кожної команди.
+
+**Jenkins:**
+
+```bash
+kubectl port-forward svc/jenkins 8080:80 -n jenkins
+```
+
+👉 Доступно за адресою: http://localhost:8080 *(Логін: `admin`, пароль див. у розділі "Отримання доступів")*
+
+**Argo CD:**
+
+```bash
+kubectl port-forward svc/argocd-server 8081:443 -n argocd
+```
+
+👉 Доступно за адресою: https://localhost:8081 *(Прийміть самопідписаний сертифікат. Логін: `admin`, пароль див. вище)*
+
+
+## 📊 Етап 4. Моніторинг та перевірка метрик
+
+У кластері автоматично розгорнуто `kube-prometheus-stack` (включає Prometheus та Grafana), а також `metrics-server` для роботи HPA (автомасштабування).
+
+**Grafana:**
+Відкрийте нову вкладку терміналу та виконайте:
+
+```bash
+kubectl port-forward svc/prometheus-grafana 3000:80 -n monitoring
+```
+
+👉 Доступно за адресою: http://localhost:3000 *(Логін: `admin`, пароль див. у розділі "Отримання доступів")*
+
+**Перевірити стан метрик в Grafana Dashboard:**
+
+1. Авторизуйтесь у Grafana.
+2. Перейдіть у розділ **Dashboards**.
+3. Відкрийте стандартні дашборди, наприклад: **Kubernetes / Compute Resources / Cluster**, щоб перевірити навантаження на ноди та поди кластера.
+
+
+## 🔄 Робочий процес CI/CD (GitOps)
+
+Процес доставки коду повністю автоматизовано:
+
+1. **Push:** Розробник вносить зміни у код (папка `django`) та пушить у репозиторій.
+2. **Build (Jenkins):** Jenkins Pipeline автоматично збирає Docker-образ за допомогою Kaniko (без доступу до Docker-демона) та пушить його в AWS ECR.
+3. **Update Git:** Jenkins оновлює файл `charts/django-app/values.yaml` новим тегом образу і робить автоматичний коміт у Git (`[skip ci]`).
+4. **Sync (Argo CD):** Argo CD фіксує зміну маніфестів у репозиторії та автоматично синхронізує стан кластера, запускаючи нові версії подів Django.
+
+
+## 🧹 Очищення інфраструктури
+
+Щоб уникнути зайвих витрат в AWS, після завершення перевірки проєкту обов'язково видаліть усі створені ресурси:
+
+```bash
+terraform destroy -auto-approve
+```
+
+Після успішного видалення основних ресурсів, видаліть S3-бакет із файлом стану:
+
+```bash
+cd bootstrap
 terraform destroy -auto-approve
 ```
