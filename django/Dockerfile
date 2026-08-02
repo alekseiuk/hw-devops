@@ -9,7 +9,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Збираємо статичні файли в образ
-RUN python manage.py collectstatic --noinput
+RUN SECRET_KEY=dummy python manage.py collectstatic --noinput
 
 # Запускаємо Gunicorn
 # -w 3: кількість воркерів (зазвичай формула: (2 x $num_cores) + 1)
