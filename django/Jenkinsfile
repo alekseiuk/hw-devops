@@ -80,6 +80,7 @@ spec:
                     withCredentials([usernamePassword(credentialsId: env.CREDENTIALS_ID, passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                         sh """
                         # Налаштовуємо Git
+                        git config --global --add safe.directory '*'
                         git config --global user.email "${COMMIT_EMAIL}"
                         git config --global user.name "${COMMIT_NAME}"
                         
