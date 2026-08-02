@@ -5,7 +5,9 @@ metadata:
   labels:
     app: {{ .Release.Name }}-django
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
       app: {{ .Release.Name }}-django
