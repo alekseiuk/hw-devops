@@ -1,7 +1,7 @@
 image:
   # Замініть на свій AWS Account ID
   repository: "995370108987.dkr.ecr.eu-central-1.amazonaws.com/demo-ecr"
-  tag: "7-f820579e"
+  tag: "8-b4382554"
   pullPolicy: IfNotPresent
 
 service:
