@@ -43,6 +43,9 @@ if not DEBUG:
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
+pod_ip = os.environ.get("POD_IP")
+if pod_ip:
+    ALLOWED_HOSTS.append(pod_ip)
 
 # Application definition
 
