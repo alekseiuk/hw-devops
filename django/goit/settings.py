@@ -32,6 +32,9 @@ else:
 if not DEBUG:
     # Перенаправлення всього HTTP трафіку на HTTPS
     SECURE_SSL_REDIRECT = True
+
+    # Виняток для health-check (щоб Kubernetes не переходив на HTTPS)
+    SECURE_REDIRECT_EXEMPT = [r'^health/$']
     
     # Cookies передаються тільки по HTTPS
     SESSION_COOKIE_SECURE = True
