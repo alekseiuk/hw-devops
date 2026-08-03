@@ -176,7 +176,7 @@ variable "db_name" {
 variable "db_username" {
   description = "Ім'я користувача-адміністратора бази даних"
   type        = string
-  default     = "postgres"
+  default     = "db_admin"
 }
 
 variable "db_backup_retention_period" {

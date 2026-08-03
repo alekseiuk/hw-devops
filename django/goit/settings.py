@@ -31,7 +31,7 @@ else:
 
 if not DEBUG:
     # Перенаправлення всього HTTP трафіку на HTTPS
-    SECURE_SSL_REDIRECT = True
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True').lower() == 'true'
 
     # Виняток для health-check (щоб Kubernetes не переходив на HTTPS)
     SECURE_REDIRECT_EXEMPT = [r'.*health.*']
