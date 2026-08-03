@@ -17,3 +17,14 @@ variable "ecr_repository_arn" {
   description = "ARN ECR репозиторію"
   type        = string
 }
+
+variable "github_username" {
+  description = "GitHub username"
+  type        = string
+}
+
+variable "github_token" {
+  description = "GitHub Personal Access Token"
+  type        = string
+  sensitive   = true
+}

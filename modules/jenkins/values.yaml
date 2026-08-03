@@ -33,6 +33,7 @@ controller:
     - docker-plugin:latest
     - docker-workflow:latest
     - configuration-as-code:latest
+    - kubernetes-credentials-provider:latest
 
   serviceAccount:
     name: jenkins-sa

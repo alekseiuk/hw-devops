@@ -101,6 +101,9 @@ module "jenkins" {
   oidc_provider_url  = module.eks.oidc_provider_url
   ecr_repository_arn = module.ecr.repository_arn
 
+  github_username = var.github_username
+  github_token    = var.github_token
+
   depends_on = [module.eks]
 }
 

@@ -20,6 +20,10 @@ eks_max_size      = 3
 eks_min_size      = 1
 allowed_api_ips   = ["0.0.0.0/0"]
 
+# Jenkins
+github_username = "alekseiuk"                  # Ваш логін
+github_token    = "ghp_xxxxxxxxxxxxxxxxxxxxxx" # Ваш згенерований токен
+
 # Argo CD
 argocd_app_repo_url        = "https://github.com/alekseiuk/hw-devops.git"
 argocd_app_target_revision = "final-project"

@@ -19,7 +19,7 @@ spec:
       requests:
         cpu: 250m
         memory: 512Mi
-  - name: git # Додаємо новий контейнер для Git-операцій
+  - name: git
     image: alpine/git:v2.40.1
     command:
     - cat
@@ -29,7 +29,6 @@ spec:
     }
     
     environment {
-
         // === AWS & Registry Config ===
         AWS_ACCOUNT_ID = '995370108987'
         AWS_REGION     = 'eu-central-1'
@@ -62,12 +61,17 @@ spec:
         stage('Build & Push Docker Image (Kaniko)') {
             steps {
                 container('kaniko') {
-                    sh """
+                    sh '''
+                    mkdir -p /kaniko/.docker
+                    cat > /kaniko/.docker/config.json <<EOF
+                    { "credHelpers": { "${ECR_REGISTRY}": "ecr-login" } }
+                    EOF
                     /kaniko/executor \
-                        --context=dir://\${WORKSPACE}/${APP_DIR} \
+                        --context=dir://${WORKSPACE}/${APP_DIR} \
                         --dockerfile=${DOCKERFILE_NAME} \
-                        --destination=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}
-                    """
+                        --destination=${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG} \
+                        --destination=${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
+                    '''
                 }
             }
         }

@@ -68,6 +68,18 @@ variable "allowed_api_ips" {
   type        = list(string)
 }
 
+# --- Змінні для Jenkins ---
+variable "github_username" {
+  type        = string
+  description = "GitHub username for Jenkins pipeline"
+}
+
+variable "github_token" {
+  type        = string
+  description = "GitHub Personal Access Token"
+  sensitive   = true
+}
+
 # --- Змінні для Argo CD ---
 variable "argocd_app_repo_url" {
   description = "URL Git-репозиторію з Helm-чартом застосунку"
